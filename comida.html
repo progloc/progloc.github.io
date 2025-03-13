@@ -4,6 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastronomía de Tenerife</title>
+    <style>
+        /* Keep your existing CSS variables and global styles */
+        /* I'm only adding the specific modal styles to integrate with your existing design */
+        
+        /* Modal specific styles */
+        .dish-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s var(--ultra-smooth), visibility 0.3s var(--ultra-smooth);
+        }
+
+        .dish-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dish-modal-content {
+            background-color: var(--card-bg);
+            width: 90%;
+            max-width: 450px;
+            border-radius: 15px;
+            overflow: hidden;
+            transform: scale(0.8);
+            transition: transform 0.4s var(--bounce-timing);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .dish-modal.active .dish-modal-content {
+            transform: scale(1);
+        }
+
+        .dish-modal-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        .dish-modal-info {
+            padding: 20px;
+        }
+
+        .dish-modal-info h2 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .dish-modal-section {
+            margin-bottom: 15px;
+        }
+
+        .dish-modal-section h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .dish-modal-section p {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .dish-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .dish-modal-close:hover {
+            background-color: var(--secondary-color);
+            transform: rotate(90deg);
+        }
+    </style>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -38,36 +138,168 @@
         <section class="grid-section">
             <h2>Platos Típicos</h2>
             <div class="grid-container">
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="mojo">
                     <img src="assets/comida-2.webp" alt="Mojo Picón">
                     <h3>Mojo Picón</h3>
                     <p>La rica salsa Canaria es el mojo picón</p>
                 </div>
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="marisco">
                     <img src="assets/comida-3.webp" alt="Marisco Fresco">
                     <h3>Marisco Fresco</h3>
                     <p>Marisco fresco del Atlántico</p>
                 </div>
             </div>
             <div class="grid-container">
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="papas">
                     <img src="assets/papas_arrugadas.webp" alt="Papas arrugadas con mojo">
                     <h3>Papas Arrugadas con Mojo</h3>
                     <p>El plato más tradicional de Canarias, servido con una deliciosa salsa mojo.</p>
                 </div>
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="gofio">
                     <img src="assets/gofio.webp" alt="Gofio">
                     <h3>Gofio</h3>
                     <p>Base de la gastronomía canaria, utilizado en múltiples preparaciones.</p>
                 </div>
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="pescado">
                     <img src="assets/pescado_fresco.webp" alt="Pescado fresco">
                     <h3>Pescado Fresco</h3>
                     <p>Del mar a tu plato, con la frescura que solo Tenerife puede ofrecer.</p>
                 </div>
             </div>
         </section>
-
+    
+        <!-- Modal template with new class names to avoid conflicts -->
+        <div id="dishModal" class="dish-modal">
+            <button id="closeModal" class="dish-modal-close">&times;</button>
+            <div class="dish-modal-content">
+                <img id="modalImage" class="dish-modal-image" src="" alt="">
+                <div class="dish-modal-info">
+                    <h2 id="modalTitle"></h2>
+                    <div class="dish-modal-section">
+                        <h3>Descripción</h3>
+                        <p id="modalDescription"></p>
+                    </div>
+                    <div class="dish-modal-section">
+                        <h3>Ingredientes</h3>
+                        <p id="modalIngredients"></p>
+                    </div>
+                    <div class="dish-modal-section">
+                        <h3>Preparación</h3>
+                        <p id="modalPreparation"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <script>
+            // Dish data
+            const dishData = {
+                mojo: {
+                    title: "Mojo Picón",
+                    image: "assets/comida-2.webp",
+                    description: "El mojo picón es una salsa tradicional canaria con un característico sabor picante. Es uno de los acompañamientos más populares en la gastronomía de las islas.",
+                    ingredients: "Pimientos rojos secos, ajo, comino, pimentón, aceite de oliva, vinagre, sal.",
+                    preparation: "Se machacan los ajos con la sal en un mortero. Se añaden los pimientos remojados y se sigue machacando. Se incorporan el comino, el pimentón y finalmente el aceite y el vinagre hasta conseguir una salsa homogénea."
+                },
+                marisco: {
+                    title: "Marisco Fresco",
+                    image: "assets/comida-3.webp",
+                    description: "El marisco fresco del Atlántico es uno de los grandes tesoros culinarios de Canarias. Las aguas que rodean las islas proporcionan una gran variedad de crustáceos y moluscos de alta calidad.",
+                    ingredients: "Según temporada: langostas, camarones, lapas, pulpo, mejillones y diversos tipos de cangrejos.",
+                    preparation: "La preparación varía según el tipo de marisco. Generalmente se cocina a la plancha, hervido con sal y laurel, o en caldos y arroces."
+                },
+                papas: {
+                    title: "Papas Arrugadas con Mojo",
+                    image: "assets/papas_arrugadas.webp",
+                    description: "Las papas arrugadas son uno de los platos más emblemáticos de la cocina canaria. Se trata de pequeñas patatas cocidas con piel en agua con abundante sal, lo que les da su característica textura arrugada y su particular sabor.",
+                    ingredients: "Papas pequeñas (preferiblemente variedad 'bonita' canaria), sal gruesa marina.",
+                    preparation: "Se lavan bien las papas sin pelarlas. Se ponen a cocer cubiertas con agua y abundante sal gruesa. Cuando están tiernas, se escurren y se dejan secar al fuego para que se forme la característica costra de sal."
+                },
+                gofio: {
+                    title: "Gofio",
+                    image: "assets/gofio.webp",
+                    description: "El gofio es un alimento básico en la dieta tradicional canaria, elaborado a partir de cereales tostados y molidos. Fue un alimento fundamental para los antiguos guanches y sigue siendo un elemento esencial en la cocina de las islas.",
+                    ingredients: "Trigo, millo (maíz), cebada, centeno o mezcla de varios cereales.",
+                    preparation: "Los granos se tuestan y luego se muelen hasta obtener una harina. Se puede consumir de diversas formas: en escaldón (mezclado con caldo), con leche, en postres o como espesante en sopas y guisos."
+                },
+                pescado: {
+                    title: "Pescado Fresco",
+                    image: "assets/pescado_fresco.webp",
+                    description: "El pescado fresco es uno de los principales atractivos de la gastronomía tinerfeña. La riqueza de las aguas del Atlántico proporciona una gran variedad de especies de excepcional calidad.",
+                    ingredients: "Vieja, cherne, sama, abade, cabrilla, bocinegro, entre otros, según temporada.",
+                    preparation: "La forma más tradicional de prepararlo es 'a la espalda' (abierto y a la plancha) o frito, sazonado simplemente con sal gruesa, ajo y perejil. También es común encontrarlo en guisos, sancochos o encebollado."
+                }
+            };
+    
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get elements
+                const gridItems = document.querySelectorAll('.grid-item');
+                const modal = document.getElementById('dishModal');
+                const closeBtn = document.getElementById('closeModal');
+                const modalImage = document.getElementById('modalImage');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalDescription = document.getElementById('modalDescription');
+                const modalIngredients = document.getElementById('modalIngredients');
+                const modalPreparation = document.getElementById('modalPreparation');
+    
+                // Open modal function
+                function openModal(dishId) {
+                    const dish = dishData[dishId];
+                    
+                    // Populate modal content
+                    modalImage.src = dish.image;
+                    modalImage.alt = dish.title;
+                    modalTitle.textContent = dish.title;
+                    modalDescription.textContent = dish.description;
+                    modalIngredients.textContent = dish.ingredients;
+                    modalPreparation.textContent = dish.preparation;
+                    
+                    // Show modal with animation
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                }
+    
+                // Close modal function
+                function closeModal() {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+    
+                // Add click event to each grid item
+                gridItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const dishId = this.getAttribute('data-dish');
+                        openModal(dishId);
+                    });
+                });
+    
+                // Close modal when clicking close button
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event bubbling
+                    closeModal();
+                });
+    
+                // Close modal when clicking outside
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+                
+                // Add keyboard support (ESC key)
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && modal.classList.contains('active')) {
+                        closeModal();
+                    }
+                });
+                
+                // Stop propagation for modal content
+                const modalContent = document.querySelector('.dish-modal-content');
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+        </script>
         <section class="content-section">
             <h2>Nuestra Gastronomía</h2>
             <p>La gastronomía de Tenerife es un reflejo de su rica historia y tradiciones. Los platos típicos canarios combinan productos locales de alta calidad con técnicas culinarias tradicionales que se han transmitido de generación en generación.</p>

@@ -4,6 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playas de Tenerife - Descubre Tenerife</title>
+    <style>
+        /* Keep your existing CSS variables and global styles */
+        /* I'm only adding the specific modal styles to integrate with your existing design */
+        
+        /* Modal specific styles */
+        .dish-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s var(--ultra-smooth), visibility 0.3s var(--ultra-smooth);
+        }
+
+        .dish-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dish-modal-content {
+            background-color: var(--card-bg);
+            width: 90%;
+            max-width: 450px;
+            border-radius: 15px;
+            overflow: hidden;
+            transform: scale(0.8);
+            transition: transform 0.4s var(--bounce-timing);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .dish-modal.active .dish-modal-content {
+            transform: scale(1);
+        }
+
+        .dish-modal-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        .dish-modal-info {
+            padding: 20px;
+        }
+
+        .dish-modal-info h2 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .dish-modal-section {
+            margin-bottom: 15px;
+        }
+
+        .dish-modal-section h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .dish-modal-section p {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .dish-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .dish-modal-close:hover {
+            background-color: var(--secondary-color);
+            transform: rotate(90deg);
+        }
+    </style>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -34,24 +134,125 @@
         <section class="grid-section">
             <h2>Playas Destacadas</h2>
             <div class="grid-container">
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="teresitas">
                     <img src="assets/playa-1.webp" alt="Playa De Las Teresitas">
                     <h3>Las Teresitas</h3>
                     <p>Playa De Las Teresitas</p>
                 </div>
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="cristianos">
                     <img src="assets/playa-2.webp" alt="Playa De Los Cristianos">
                     <h3>Los Cristianos</h3>
                     <p>Playa De Los Cristianos</p>
                 </div>
-                <div class="grid-item card-3d">
+                <div class="grid-item card-3d" data-dish="medano">
                     <img src="assets/playa-3.webp" alt="Playa De El Médano">
                     <h3>El Médano</h3>
                     <p>Playa De El Médano</p>
                 </div>
             </div>
         </section>
-
+        <!-- Modal template with new class names to avoid conflicts -->
+        <div id="dishModal" class="dish-modal">
+            <button id="closeModal" class="dish-modal-close">&times;</button>
+            <div class="dish-modal-content">
+                <img id="modalImage" class="dish-modal-image" src="" alt="">
+                <div class="dish-modal-info">
+                    <h2 id="modalTitle"></h2>
+                    <div class="dish-modal-section">
+                        <h3>Descripción</h3>
+                        <p id="modalDescription"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <script>
+            // Dish data
+            const dishData = {
+                teresitas: {
+                    title: "Las Teresitas",
+                    image: "assets/playa-1.webp",
+                    descripción: "La playa de Las Teresitas es una playa situada en el pueblo de San Andrés del municipio de Santa Cruz de Tenerife, en la isla de Tenerife (Canarias, España). Es la playa más conocida y turística de la ciudad de Santa Cruz, ofreciendo equipamientos y servicios hosteleros.",
+                },
+                cristianos: {
+                    title: "Playa De Los Cristianos",
+                    image: "assets/playa-2.webp",
+                    descripción: "La Playa Los Cristianos está ubicada en el municipio Arona en el pueblo de Los Cristianos, en el sur de la isla de Tenerife, y junto al puerto marítimo que lleva el mismo nombre que el pueblo. La playa es de fina arena dorada, ideal para tumbarte en ella y tomar el sol, aunque si lo prefieres también puedes alquilar una hamaca y sombrilla.",
+                },
+                medano: {
+                    title: "Playa De El Médano",
+                    image: "assets/playa-3.webp",
+                    descripción: "En el sur de la isla de Tenerife se encuentra una de las playas más atractivas para los residentes de la isla: El Médano. Una playa de arena tostada, poca profundidad y oleaje moderado, que dispone de todos los servicios y equipamientos de una playa urbana",
+                }
+            };
+    
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get elements
+                const gridItems = document.querySelectorAll('.grid-item');
+                const modal = document.getElementById('dishModal');
+                const closeBtn = document.getElementById('closeModal');
+                const modalImage = document.getElementById('modalImage');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalDescription = document.getElementById('modalDescription');
+                const modalIngredients = document.getElementById('modalIngredients');
+                const modalPreparation = document.getElementById('modalPreparation');
+    
+                // Open modal function
+                function openModal(dishId) {
+                    const dish = dishData[dishId];
+                    
+                    // Populate modal content
+                    modalImage.src = dish.image;
+                    modalImage.alt = dish.title;
+                    modalTitle.textContent = dish.title;
+                    modalDescription.textContent = dish.descripción;
+                    
+                    // Show modal with animation
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                }
+    
+                // Close modal function
+                function closeModal() {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+    
+                // Add click event to each grid item
+                gridItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const dishId = this.getAttribute('data-dish');
+                        openModal(dishId);
+                    });
+                });
+    
+                // Close modal when clicking close button
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event bubbling
+                    closeModal();
+                });
+    
+                // Close modal when clicking outside
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+                
+                // Add keyboard support (ESC key)
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && modal.classList.contains('active')) {
+                        closeModal();
+                    }
+                });
+                
+                // Stop propagation for modal content
+                const modalContent = document.querySelector('.dish-modal-content');
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+        </script>
         <section class="grid-section">
             <h2>Playas del Norte</h2>
             <div class="beach-details">
